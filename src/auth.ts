@@ -11,7 +11,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       // You can specify which fields should be submitted, by adding keys to the `credentials` object.
       // e.g. domain, username, password, 2FA token, etc.
       credentials: {
-        email: {},
+        username: {},
         password: {},
       },
       authorize: async (credentials) => {
@@ -20,11 +20,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           method: "POST",
           url: "http://localhost:8080/api/v1/auth/login",
           body: {
-            username: credentials.email,
+            username: credentials.username,
             password: credentials.password,
           },
         });
-        if (!res.statusCode) {
+        if (res.statusCode === 201) {
           // return user object with their profile data
           return {
             _id: res.data?.user._id,
@@ -51,14 +51,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     jwt({ token, user }) {
       if (user) {
         // User is available during sign-in
-        // token._id = user._id;   
-        token.user = (user as IUser);
+        token.user = user as IUser;
       }
       return token;
     },
     session({ session, token }) {
       (session.user as IUser) = token.user;
       return session;
+    },
+    authorized: async ({ auth }) => {
+      // Logged in users are authenticated, otherwise redirect to login page
+      return !!auth
     },
   },
 });
