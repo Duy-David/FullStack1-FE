@@ -4,22 +4,31 @@ import { ArrowLeftOutlined } from "@ant-design/icons";
 import Link from "next/link";
 import { authenticate } from "@/utils/actions";
 import { useRouter } from "next/navigation";
+import ModelReactive from "./model.reactive";
+import { useState } from "react";
 
 const Login = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
   const router = useRouter();
   const onFinish = async (values: any) => {
     // console.log(">>> value:", values);
+    setUserEmail("")
     const { username, password } = values;
     // trigger signin
     const res = await authenticate(username, password);
     if (res?.error) {
+      if (res?.code === 2) {
+        // router.push("/verify");
+        setUserEmail(username)
+        setIsModalOpen(true)
+        return
+      }
       notification.error({
         message: "Error Login",
         description: res?.error,
       });
-      if (res?.code === 2) {
-        router.push("/verify");
-      }
+     
     } else {
       router.push("/dashboard");
     }
@@ -29,6 +38,7 @@ const Login = () => {
   };
 
   return (
+    <>
     <Row justify={"center"} style={{ marginTop: "30px" }}>
       <Col xs={24} md={16} lg={8}>
         <fieldset
@@ -89,6 +99,8 @@ const Login = () => {
         </fieldset>
       </Col>
     </Row>
+  <ModelReactive isModalOpen={isModalOpen} setIsModalOpen={setIsModalOpen} userEmail={userEmail}/>
+    </>
   );
 };
 
